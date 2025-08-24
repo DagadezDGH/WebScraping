@@ -1,10 +1,13 @@
 # WebScraping
-Repository dedicated to testing web scraping techniques with different filters and storing filter applications.
+Repository dedicated to:
+
+- Testing web scraping techniques with different filters.
+- Storing filter applications.
 
 We will use two filters on the website https://news.ycombinator.com/ and these are:
 
-Filter all entries with more than five words in the title ordered by the number of comments first.
-Filter all entries with less than or equal to five words in the title ordered by points.
+- Filter all entries with more than five words in the title ordered by the number of comments first.
+- Filter all entries with less than or equal to five words in the title ordered by points.
 
 The filters applied by the user and their timestamp are saved in a SQLite database.
 
