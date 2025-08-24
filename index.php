@@ -61,7 +61,57 @@ foreach ($rows as $row) {
     }  
 }
 
-print_r($scrap_total);
-print_r($scrap_title_5_words);
-print_r($scrap_title_less_5_words);
+// print_r($scrap_total);
+// print_r($scrap_title_5_words);
+// print_r($scrap_title_less_5_words);
 ?>
+<!DOCTYPE html>
+<html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Web Scraping</title>
+        <style>
+            .result-box {
+                border: 2px solid #333;
+                border-radius: 8px;
+                padding: 15px;
+                margin: 20px auto;
+                width: 60%;
+                background: #f9f9f9;
+                font-family: Arial, sans-serif;
+            }
+            .result-item {
+                padding: 8px;
+                border-bottom: 1px solid #ddd;
+            }
+            .result-item:last-child {
+                border-bottom: none;
+            }
+        </style>
+    </head>
+    <body>
+        <h1 style="text-align: center;" >Web Scraping Filters</h1>
+        <div style="text-align: center;">
+            <h2>Filters</h2>
+            <form method="post">
+                <button type="submit" name="filter" value="comments">Show Titles with More Than 5 Words</button>
+                <br><br>
+                <button type="submit" name="filter" value="points">Show Titles with Less Than 5 Words</button>
+            </form>
+        </div>
+        <?php if(!empty($results)){?>
+        <h2 style="text-align: center;">Results</h2>
+        <div class="result-box" style="text-align: center;">
+            <?php foreach ($results as $r) { ?>
+                <div class="result-item">
+                    <span class="rank">Rank: <?= $r["rank"] ?></span> |
+                    <span class="title">Title: <?= $r["title"] ?></span> |
+                    <span class="points">Points: <?= $r["score"] ?></span> |
+                    <span class="comments">Comments: <?= $r["comments"] ?></span>
+                </div>
+            <?php } ?>
+        </div>
+        <?php } ?>
+    </body>
+</html>
