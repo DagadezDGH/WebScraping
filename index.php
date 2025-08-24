@@ -1,4 +1,5 @@
 <?php
+// Inicializar cURL contra la url elegida, realizar petición del contenido y cerrar conexión
 $curl = curl_init();
 
 curl_setopt($curl, CURLOPT_URL, 'https://news.ycombinator.com/');
@@ -11,30 +12,37 @@ $response = curl_exec($curl);
 
 curl_close($curl);
 
+//Formateo de petición a UTF-8 
 $response = mb_convert_encoding($response, 'HTML-ENTITIES', 'UTF-8');
 
+// Cargar el HTML en un objeto DOM y trabajar con DOMXPath para la utilizar sus queries
 $dom = new DOMDocument();
 $dom->loadHTML($response);
 
+//Declaración de XPath y query para extraer todos los tr que contengan la clase que contengan "athing"
 $xpath = new DOMXPath($dom);
 $rows = $xpath->query('//tr[contains(@class, "athing")]');
 
 $scrap_total = array();
 $scrap_title_5_words = array();
 $scrap_title_less_5_words = array();
+
+//Bucle para recorrer las rows y buscar entre sus elementos hijos el rank, title y en el siguiente tr score y comments
+//En caso de que alguno de las etiquetas no sea encontrada se le asignara el valor null
 foreach ($rows as $row) {
 
     $rank = $xpath->query('.//span[contains(@class, "rank")]', $row)->item(0)?->textContent ?? null;
     $title = $xpath->query('.//span[contains(@class, "titleline")]/a', $row)->item(0)?->textContent ?? null;
 
-    $nextRow = $row->nextSibling;
+    $next_row = $row->nextSibling;
     $score = null;
     $comments = null;
-    if ($nextRow && $nextRow->nodeType === XML_ELEMENT_NODE) {
-        $score = $xpath->query('.//span[contains(@class, "score")]', $nextRow)->item(0)?->textContent ?? null;
-        $comments = $xpath->query('.//span[contains(@class, "subline")]/a[contains(@href, "item?id=") and not(contains(@href, "goto=news"))]', $nextRow)->item(0)?->textContent ?? null;
+    if ($next_row && $next_row->nodeType === XML_ELEMENT_NODE) {
+        $score = $xpath->query('.//span[contains(@class, "score")]', $next_row)->item(0)?->textContent ?? null;
+        $comments = $xpath->query('.//span[contains(@class, "subline")]/a[contains(@href, "item?id=") and not(contains(@href, "goto=news"))]', $next_row)->item(0)?->textContent ?? null;
     }
 
+    //Montaje de arrays para almacenar los datos extraídos en dos grupos 5 o más palabras en title/ menos de 5 palabras
     $scrap_total[] = array(
         'rank' => $rank,
         'title' => $title,
@@ -59,6 +67,7 @@ foreach ($rows as $row) {
     }
 }
 
+//Conexión a la db
 try {
     $db = new PDO("sqlite:" . __DIR__ . "/db/scraping_db.db");
     $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
@@ -67,6 +76,7 @@ try {
     // echo "Error al conectar: " . $e->getMessage();
 }
 
+//Función para registrar logs en la base de datos
 function registrarLog($db, $filter)
 {
     $query = $db->prepare("INSERT INTO logs (filter, timestamp) VALUES (:filter, :timestamp)");
@@ -76,12 +86,14 @@ function registrarLog($db, $filter)
     ]);
 }
 
+//Función para ordenar por comentarios de manera descendente
 function commentsFilters($scrap_title_5_words)
 {
     usort($scrap_title_5_words, fn($a, $b) => intval($b['comment']) <=> intval($a['comment']));
     return $scrap_title_5_words;
 }
 
+//Función para ordenar por puntos de manera descendente
 function pointsFilters($scrap_title_less_5_words)
 {
     usort($scrap_title_less_5_words, fn($a, $b) => intval($b['score']) <=> intval($a['score']));
@@ -155,5 +167,4 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         </div>
     <?php } ?>
 </body>
-
 </html>
