@@ -19,21 +19,28 @@ $dom = new DOMDocument();
 $dom->loadHTML($response);
 
 $xpath = new DOMXPath($dom);
-$ranks = $xpath->query('//span[contains(@class, "rank")]');
-$titles = $xpath->query('//span[contains(@class, "titleline")]/a');
-$scores = $xpath->query('//span[contains(@class, "score")]');
+$rows = $xpath->query('//tr[contains(@class, "athing")]');
 
 $scrap_total = array();
-for ($i=0; $i < $ranks->length; $i++) {
-    $rank = trim($ranks->item($i)->nodeValue);
-    $title = trim($titles->item($i)->nodeValue);
-    $score = trim($scores->item($i)->nodeValue);
+foreach ($rows as $row) {
+
+    $rank = $xpath->query('.//span[contains(@class, "rank")]', $row)->item(0)?->textContent ?? null;
+    $title = $xpath->query('.//span[contains(@class, "titleline")]/a', $row)->item(0)?->textContent ?? null;
+
+    $nextRow = $row->nextSibling;
+    $score = null;
+    $comments = null;
+    if ($nextRow && $nextRow->nodeType === XML_ELEMENT_NODE) {
+        $score = $xpath->query('.//span[contains(@class, "score")]', $nextRow)->item(0)?->textContent ?? null;
+        $comments = $xpath->query('.//span[contains(@class, "subline")]/a[contains(@href, "item?id=") and not(contains(@href, "goto=news"))]', $nextRow)->item(0)?->textContent ?? null;
+    }
 
     $scrap_total[] = array(
         'rank' => $rank,
         'title' => $title,
         'npalabras' => str_word_count($title),
         'score' => $score,
+        'comment' => $comments
     );
 }
 
