@@ -22,6 +22,8 @@ $xpath = new DOMXPath($dom);
 $rows = $xpath->query('//tr[contains(@class, "athing")]');
 
 $scrap_total = array();
+$scrap_title_5_words = array();
+$scrap_title_less_5_words = array();
 foreach ($rows as $row) {
 
     $rank = $xpath->query('.//span[contains(@class, "rank")]', $row)->item(0)?->textContent ?? null;
@@ -38,11 +40,28 @@ foreach ($rows as $row) {
     $scrap_total[] = array(
         'rank' => $rank,
         'title' => $title,
-        'npalabras' => str_word_count($title),
+        'npalabras' => str_word_count($title, 0, '0..9.'),
         'score' => $score,
         'comment' => $comments
     );
+    if (str_word_count($title, 0, '0..9.') >= 5) {
+        $scrap_title_5_words[] = array(
+            'rank' => $rank,
+            'title' => $title,
+            'score' => $score,
+            'comment' => $comments
+        );
+    } else {
+        $scrap_title_less_5_words[] = array(
+            'rank' => $rank,
+            'title' => $title,
+            'score' => $score,
+            'comment' => $comments
+        );
+    }  
 }
 
 print_r($scrap_total);
+print_r($scrap_title_5_words);
+print_r($scrap_title_less_5_words);
 ?>
